@@ -12,7 +12,7 @@ def calc_exp_score(playerA_rating, playerB_rating):
 	return exp_score
 	
 #define a function for calculating new elo
-def update_elo(old_elo, k_factor, actual_score, expected_score):
+def update_elo(old_elo, k, actual_score, expected_score):
 	new_elo = old_elo + k * (actual_score - expected_score)
 	return new_elo
 
@@ -57,24 +57,43 @@ matches = DataFrame(all_matches, columns=header_info)
 #Convert objects within dataframe to int64
 players = players.convert_objects(convert_numeric=True)
 
+#Convert objects within dataframe to str
+matches = matches.convert_objects(convert_numeric=True)
+
 #find index of a player in players data frame by player_id
 ind = players[players['player_id']==100001].index.tolist()
 
 players.loc[ind[0],'elo'] = players.loc[ind[0], 'elo'] + 0
 players.loc[ind[0],'last_tourney_date'] = '1993-03-22'
 
+for i in range(len(matches.index)):
+	winner_id = matches.loc[i, 'winner_id']
+	loser_id = matches.loc[i, 'loser_id']
+	tourney_date = matches.loc[i, 'tourney_date']
+	index_winner = players[players['player_id'] == winner_id].index.tolist()
+	index_loser = players[players['player_id'] == loser_id].index.tolist()
+	old_elo_winner = players.loc[index_winner[0], 'elo'] 
+	old_elo_loser = players.loc[index_loser[0], 'elo']
+	exp_score_winner = calc_exp_score(old_elo_winner, old_elo_loser)
+	exp_score_loser = 1 - exp_score_winner 
+	new_elo_winner = update_elo(old_elo_winner, k_factor, score, exp_score_winner)
+	new_elo_loser = update_elo(old_elo_loser, k_factor, score-1, exp_score_loser)
+	players.loc[index_winner[0], 'elo'] = new_elo_winner
+	players.loc[index_loser[0], 'elo'] = new_elo_loser
+	players.loc[index_winner[0], 'last_tourney_date'] = tourney_date
+	players.loc[index_loser[0], 'last_tourney_date'] = tourney_date
 
-winner_id = matches.loc[0, 'winner_id']
-loser_id = matches.loc[0, 'loser_id']
-tourney_date = matches.loc[0, 'tourney_date']
+#tests
+print players.loc[players[players['player_id']==100083].index.tolist()[0], 'elo']
+print players.loc[players[players['player_id']==109760].index.tolist()[0], 'elo']
+print players.loc[players[players['player_id']==100058].index.tolist()[0], 'elo']
+print players.loc[players[players['player_id']==100129].index.tolist()[0], 'elo']
 
+players.info()
+matches.info()
 
-
-
-
-
-
-
+#output
+players.to_csv('1969_elo.csv')
 
 
 
