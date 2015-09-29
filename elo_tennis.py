@@ -1,14 +1,20 @@
 import csv
 from pandas import DataFrame
 from pandas import Series
+import math
 
 #define assumptions
-k_factor = 20
+def k_factor(matches_played):
+	K = 250
+	offset = 5
+	shape = 0.4
+	return K/(matches_played + offset)**shape
+	
 score = 1
 
 #define a function for calculating the expected score of player_A
 def calc_exp_score(playerA_rating, playerB_rating):
-	exp_score = 1/(1+10^((playerB_rating - playerA_rating)/400))
+	exp_score = 1/(1+10**((playerB_rating - playerA_rating)/400))
 	return exp_score
 	
 #define a function for calculating new elo
@@ -35,6 +41,7 @@ players = DataFrame(all_players, columns = player_col_header)
 elo_rating = players
 elo_rating['elo'] = Series(1500, index=elo_rating.index)
 elo_rating['last_tourney_date'] = Series('N/A', index=elo_rating.index)
+elo_rating['matches_played'] = Series(0, index=elo_rating.index)
 
 #read match CSV file and store important columns into lists
 with open('atp_matches_1969.csv') as csvfile:
@@ -76,12 +83,16 @@ for i in range(len(matches.index)):
 	old_elo_loser = players.loc[index_loser[0], 'elo']
 	exp_score_winner = calc_exp_score(old_elo_winner, old_elo_loser)
 	exp_score_loser = 1 - exp_score_winner 
-	new_elo_winner = update_elo(old_elo_winner, k_factor, score, exp_score_winner)
-	new_elo_loser = update_elo(old_elo_loser, k_factor, score-1, exp_score_loser)
+	matches_played_winner = players.loc[index_winner[0], 'matches_played']
+	matches_played_loser = players.loc[index_loser[0], 'matches_played']
+	new_elo_winner = update_elo(old_elo_winner, k_factor(matches_played_winner), score, exp_score_winner)
+	new_elo_loser = update_elo(old_elo_loser, k_factor(matches_played_loser), score-1, exp_score_loser)
 	players.loc[index_winner[0], 'elo'] = new_elo_winner
-	players.loc[index_loser[0], 'elo'] = new_elo_loser
 	players.loc[index_winner[0], 'last_tourney_date'] = tourney_date
+	players.loc[index_winner[0], 'matches_played'] = players.loc[index_winner[0], 'matches_played'] + 1
+	players.loc[index_loser[0], 'elo'] = new_elo_loser
 	players.loc[index_loser[0], 'last_tourney_date'] = tourney_date
+	players.loc[index_loser[0], 'matches_played'] = players.loc[index_winner[0], 'matches_played'] + 1
 
 #tests
 print players.loc[players[players['player_id']==100083].index.tolist()[0], 'elo']
