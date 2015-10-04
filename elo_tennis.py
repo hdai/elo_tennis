@@ -1,20 +1,22 @@
 import csv
+import math
 from pandas import DataFrame
 from pandas import Series
-import math
 
-#define assumptions
+#define k factor assumptions
 def k_factor(matches_played):
 	K = 250
 	offset = 5
 	shape = 0.4
 	return K/(matches_played + offset)**shape
-	
+
+#winning regardless the number of sets played = 1
 score = 1
 
 #define a function for calculating the expected score of player_A
+#expected score of player_B = 1 - expected score of player
 def calc_exp_score(playerA_rating, playerB_rating):
-	exp_score = 1/(1+10**((playerB_rating - playerA_rating)/400))
+	exp_score = 1/(1+(10**((playerB_rating - playerA_rating)/400)))
 	return exp_score
 	
 #define a function for calculating new elo
@@ -34,29 +36,28 @@ with open('atp_players.csv') as csvfile:
 		all_players.append(player_info)
 
 player_col_header = ['player_id', 'last_name', 'first_name', 'country']
-players = DataFrame(all_players, columns = player_col_header)
 
-#Create a dataframe for keeping track of player elo rating
+#Create a dataframe for keeping track of player info
 #every player starts with an elo rating of 1500
-elo_rating = players
-elo_rating['elo'] = Series(1500, index=elo_rating.index)
-elo_rating['last_tourney_date'] = Series('N/A', index=elo_rating.index)
-elo_rating['matches_played'] = Series(0, index=elo_rating.index)
+players = DataFrame(all_players, columns = player_col_header)
+players['elo'] = Series(1500, index=players.index)
+players['last_tourney_date'] = Series('N/A', index=players.index)
+players['matches_played'] = Series(0, index=players.index)
 
-#Convert objects within dataframe to int64
+#Convert objects within dataframe to numeric
 players = players.convert_objects(convert_numeric=True)
 
-
 #read through matches file for each year to update players data frame
+#starting from current_year
 current_year = 1968
 
-for i in range(2014-1968):
+for i in range((2015-1968)+1):
 	current_year_file_name = 'atp_matches_'+ str(current_year) + '.csv'
 
 	#read match CSV file and store important columns into lists
 	with open(current_year_file_name) as csvfile:
 		readCSV = csv.reader(csvfile, delimiter= ',')
-		col_index = [0,5,7,17,27,28]
+		col_index = [0,5,7,17,27,28,29]
 		all_matches = []
 		for row in readCSV:
 			match_info = []
@@ -64,20 +65,26 @@ for i in range(2014-1968):
 				match_info.append(row[i])
 			all_matches.append(match_info)
 		
-	#separate match_info
+	#separate column names and match info
 	header_info = all_matches[0]
 	all_matches = all_matches[1:]
 
-	#create a dataframe
+	#create a dataframe to store match info
 	matches = DataFrame(all_matches, columns=header_info)
 
-	#Convert objects within dataframe to num
+	#Convert objects within dataframe to numeric
 	matches = matches.convert_objects(convert_numeric=True)
+	
+	#Sort match dataframe by tourney_date and then by round
+	sorter = ['RR', 'R128', 'R64', 'R32', 'R16', 'QF', 'SF', 'F']
+	matches.round = matches.round.astype('category')
+	matches.round.cat.set_categories(sorter, inplace=True)
+	matches = matches.sort(['tourney_date', 'round'], ascending = [1, sorter])
 
-	for i in range(len(matches.index)):
-		winner_id = matches.loc[i, 'winner_id']
-		loser_id = matches.loc[i, 'loser_id']
-		tourney_date = matches.loc[i, 'tourney_date']
+	for index, row in matches.iterrows():
+		winner_id = row['winner_id']
+		loser_id = row['loser_id']
+		tourney_date = row['tourney_date']
 		index_winner = players[players['player_id'] == winner_id].index.tolist()
 		index_loser = players[players['player_id'] == loser_id].index.tolist()
 		old_elo_winner = players.loc[index_winner[0], 'elo'] 
@@ -93,28 +100,13 @@ for i in range(2014-1968):
 		players.loc[index_winner[0], 'matches_played'] = players.loc[index_winner[0], 'matches_played'] + 1
 		players.loc[index_loser[0], 'elo'] = new_elo_loser
 		players.loc[index_loser[0], 'last_tourney_date'] = tourney_date
-		players.loc[index_loser[0], 'matches_played'] = players.loc[index_winner[0], 'matches_played'] + 1
+		players.loc[index_loser[0], 'matches_played'] = players.loc[index_loser[0], 'matches_played'] + 1
 
 
 	#output year end elo ratings 
 	output_file_name = str(current_year) + '_elo_ranking.csv'
 	players.to_csv(output_file_name)
-	
+
 	current_year = current_year + 1
-
-
-
-#tests
-print players.loc[players[players['player_id']==100083].index.tolist()[0], 'elo']
-print players.loc[players[players['player_id']==109760].index.tolist()[0], 'elo']
-print players.loc[players[players['player_id']==100058].index.tolist()[0], 'elo']
-print players.loc[players[players['player_id']==100129].index.tolist()[0], 'elo']
-
-#find index of a player in players data frame by player_id
-ind = players[players['player_id']==100001].index.tolist()
-
-players.loc[ind[0],'elo'] = players.loc[ind[0], 'elo'] + 0
-players.loc[ind[0],'last_tourney_date'] = '1993-03-22'			
-
 
 			
