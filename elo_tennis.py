@@ -40,9 +40,11 @@ player_col_header = ['player_id', 'last_name', 'first_name', 'country']
 #Create a dataframe for keeping track of player info
 #every player starts with an elo rating of 1500
 players = DataFrame(all_players, columns = player_col_header)
-players['elo'] = Series(1500, index=players.index)
+players['current_elo'] = Series(1500, index=players.index)
 players['last_tourney_date'] = Series('N/A', index=players.index)
 players['matches_played'] = Series(0, index=players.index)
+players['peak_elo'] = Series(1500, index=players.index)
+players['peak_elo_date'] = Series('N/A', index=players.index)
 
 #Convert objects within dataframe to numeric
 players = players.convert_objects(convert_numeric=True)
@@ -87,22 +89,24 @@ for i in range((2015-1968)+1):
 		tourney_date = row['tourney_date']
 		index_winner = players[players['player_id'] == winner_id].index.tolist()
 		index_loser = players[players['player_id'] == loser_id].index.tolist()
-		old_elo_winner = players.loc[index_winner[0], 'elo'] 
-		old_elo_loser = players.loc[index_loser[0], 'elo']
+		old_elo_winner = players.loc[index_winner[0], 'current_elo'] 
+		old_elo_loser = players.loc[index_loser[0], 'current_elo']
 		exp_score_winner = calc_exp_score(old_elo_winner, old_elo_loser)
 		exp_score_loser = 1 - exp_score_winner 
 		matches_played_winner = players.loc[index_winner[0], 'matches_played']
 		matches_played_loser = players.loc[index_loser[0], 'matches_played']
 		new_elo_winner = update_elo(old_elo_winner, k_factor(matches_played_winner), score, exp_score_winner)
 		new_elo_loser = update_elo(old_elo_loser, k_factor(matches_played_loser), score-1, exp_score_loser)
-		players.loc[index_winner[0], 'elo'] = new_elo_winner
+		players.loc[index_winner[0], 'current_elo'] = new_elo_winner
 		players.loc[index_winner[0], 'last_tourney_date'] = tourney_date
 		players.loc[index_winner[0], 'matches_played'] = players.loc[index_winner[0], 'matches_played'] + 1
-		players.loc[index_loser[0], 'elo'] = new_elo_loser
+		players.loc[index_loser[0], 'current_elo'] = new_elo_loser
 		players.loc[index_loser[0], 'last_tourney_date'] = tourney_date
 		players.loc[index_loser[0], 'matches_played'] = players.loc[index_loser[0], 'matches_played'] + 1
-
-
+		if new_elo_winner > players.loc[index_winner[0], 'peak_elo']:
+			players.loc[index_winner[0], 'peak_elo'] = new_elo_winner
+			players.loc[index_winner[0], 'peak_elo_date'] = row['tourney_date']
+			
 	#output year end elo ratings 
 	output_file_name = str(current_year) + '_elo_ranking.csv'
 	players.to_csv(output_file_name)
