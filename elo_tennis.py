@@ -1,7 +1,10 @@
 import csv
 import math
+import pickle
+import pandas
 from pandas import DataFrame
 from pandas import Series
+
 
 #define k factor assumptions
 def k_factor(matches_played):
@@ -35,6 +38,7 @@ with open('atp_players.csv') as csvfile:
 			player_info.append(row[i])
 		all_players.append(player_info)
 
+#Column headers for player dataframe
 player_col_header = ['player_id', 'last_name', 'first_name', 'country']
 
 #Create a dataframe for keeping track of player info
@@ -48,6 +52,11 @@ players['peak_elo_date'] = Series('N/A', index=players.index)
 
 #Convert objects within dataframe to numeric
 players = players.convert_objects(convert_numeric=True)
+
+#Create an empty dataframe to store time series elo for top 10 players
+#Sse player_id as the column header of the dataframe
+elo_timeseries_col_header = ['104925','103819','100581','104745','100437','100656','101414','104918','101948','100284']
+elo_timeseries = DataFrame(columns=elo_timeseries_col_header)
 
 #read through matches file for each year to update players data frame
 #starting from current_year
@@ -106,11 +115,31 @@ for i in range((2015-1968)+1):
 		if new_elo_winner > players.loc[index_winner[0], 'peak_elo']:
 			players.loc[index_winner[0], 'peak_elo'] = new_elo_winner
 			players.loc[index_winner[0], 'peak_elo_date'] = row['tourney_date']
+		
+		#Convert tourney_date to a time stamp, then update elo_timeseries data frame
+		tourney_date_timestamp = pandas.to_datetime(tourney_date, format='%Y%m%d')
+		if tourney_date_timestamp not in elo_timeseries.index:
+			elo_timeseries.loc[tourney_date_timestamp] = ['nan','nan','nan','nan','nan','nan','nan','nan','nan','nan']
+			
+		if winner_id and loser_id in elo_timeseries_col_header:
+			elo_timeseries.ix[tourney_date_timestamp, winner_id]=new_elo_winner
+			elo_timeseries.ix[tourney_date_timestamp, loser_id]=new_elo_loser
+		elif winner_id in elo_timeseries_col_header:
+			elo_timeseries.ix[tourney_date_timestamp, winner_id]=new_elo_winner
+		elif loser_id in elo_timeseries_col_header:
+			elo_timeseries.ix[tourney_date_timestamp, loser_id]=new_elo_loser
 			
 	#output year end elo ratings 
-	output_file_name = str(current_year) + '_elo_ranking.csv'
-	players.to_csv(output_file_name)
+	#output_file_name = str(current_year) + 'yrend_elo_ranking.csv'
+	#players.to_csv(output_file_name)
 
 	current_year = current_year + 1
+	
+#Print all-time top 10 peak_elo
+print players.sort(columns= 'peak_elo', ascending=False)[:10]
+elo_timeseries.to_pickle('elo_timeseries.pkl')
+
+
+
 
 			
