@@ -3,6 +3,8 @@ import math
 import pickle
 import pandas
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import style
 from pandas import DataFrame
 from pandas import Series
 
@@ -25,8 +27,7 @@ def calc_exp_score(playerA_rating, playerB_rating):
 	
 #define a function for calculating new elo
 def update_elo(old_elo, k, actual_score, expected_score):
-	new_elo = old_elo + k * (actual_score - expected_score)
-	return new_elo
+	new_elo = old_elo + k * (actual_score - expected_score)#	return new_elo
 
 #read player CSV file and store important columns into lists
 with open('atp_players.csv') as csvfile:
@@ -46,7 +47,7 @@ player_col_header = ['player_id', 'last_name', 'first_name', 'country']
 #every player starts with an elo rating of 1500
 players = DataFrame(all_players, columns = player_col_header)
 players['current_elo'] = Series(1500, index=players.index)
-#players['last_tourney_date'] = Series('N/A', index=players.index)
+players['last_tourney_date'] = Series('N/A', index=players.index)
 players['matches_played'] = Series(0, index=players.index)
 players['peak_elo'] = Series(1500, index=players.index)
 players['peak_elo_date'] = Series('N/A', index=players.index)
@@ -109,10 +110,10 @@ for i in range((2015-1968)+1):
 		new_elo_winner = update_elo(old_elo_winner, k_factor(matches_played_winner), score, exp_score_winner)
 		new_elo_loser = update_elo(old_elo_loser, k_factor(matches_played_loser), score-1, exp_score_loser)
 		players.loc[index_winner[0], 'current_elo'] = new_elo_winner
-		#players.loc[index_winner[0], 'last_tourney_date'] = tourney_date
+		players.loc[index_winner[0], 'last_tourney_date'] = tourney_date
 		players.loc[index_winner[0], 'matches_played'] = players.loc[index_winner[0], 'matches_played'] + 1
 		players.loc[index_loser[0], 'current_elo'] = new_elo_loser
-		#players.loc[index_loser[0], 'last_tourney_date'] = tourney_date
+		players.loc[index_loser[0], 'last_tourney_date'] = tourney_date
 		players.loc[index_loser[0], 'matches_played'] = players.loc[index_loser[0], 'matches_played'] + 1
 		if new_elo_winner > players.loc[index_winner[0], 'peak_elo']:
 			players.loc[index_winner[0], 'peak_elo'] = new_elo_winner
@@ -136,7 +137,8 @@ for i in range((2015-1968)+1):
 	#players.to_csv(output_file_name)
 
 	current_year = current_year + 1
-	
+
+#players = pandas.read_csv('2015_elo_ranking.csv')
 #Print all-time top 10 peak_elo
 print players.sort(columns= 'peak_elo', ascending=False)[:10]
 
@@ -144,25 +146,39 @@ print players.sort(columns= 'peak_elo', ascending=False)[:10]
 #elo_timeseries.to_pickle('elo_timeseries.pkl')
 
 ##Open saved pickle file and save into a dataframe
-#elo_timeseries = pandas.read_pickle('elo_timeseries.pkl')
+elo_timeseries = pandas.read_pickle('elo_timeseries.pkl')
 
 #Convert objects within elo_timeseries dataframe to numeric
 elo_timeseries = elo_timeseries.convert_objects(convert_numeric=True)
 
-#Use linear interpolation
+#Use linear interpolation for elo_ratings
 elo_timeseries = elo_timeseries.interpolate(method='linear')
 
+#Store the indices in the elo_timeseries in a list
+index_timestamp = list(elo_timeseries.index.values)
+
+#Get rid of elo ratings since known last_tourney_date
+for player in elo_timeseries_col_header:
+	player_index = players[players['player_id'] == player].index.tolist()
+	player_last_played = players.loc[player_index[0], 'last_tourney_date']
+	player_last_played_timestamp = np.datetime64(pandas.to_datetime(player_last_played, format='%Y%m%d'))
+
+	elo_ratings_remove = index_timestamp[index_timestamp.index(player_last_played_timestamp)+1:]
+
+	for i in elo_ratings_remove:
+		elo_timeseries.loc[i, player] = np.nan
+
 style.use('stylesheet.mplstyle')
-plt.plot(df.index, df[104925])
-plt.plot(df.index, df[103819])
-plt.plot(df.index, df[100581])
-plt.plot(df.index, df[104745])
-plt.plot(df.index, df[100437])
-plt.plot(df.index, df[100656])
-plt.plot(df.index, df[101414])
-plt.plot(df.index, df[104918])
-plt.plot(df.index, df[101948])
-plt.plot(df.index, df[100284])
+plt.plot(elo_timeseries.index, elo_timeseries[104925])
+plt.plot(elo_timeseries.index, elo_timeseries[103819])
+plt.plot(elo_timeseries.index, elo_timeseries[100581])
+plt.plot(elo_timeseries.index, elo_timeseries[104745])
+plt.plot(elo_timeseries.index, elo_timeseries[100437])
+plt.plot(elo_timeseries.index, elo_timeseries[100656])
+plt.plot(elo_timeseries.index, elo_timeseries[101414])
+plt.plot(elo_timeseries.index, elo_timeseries[104918])
+plt.plot(elo_timeseries.index, elo_timeseries[101948])
+plt.plot(elo_timeseries.index, elo_timeseries[100284])
 
 plt.title("Historical elo ratings for top 10 ATP players", fontsize=25, x=0.35, y=1.15)   
 plt.xlabel("Years starting in the Open-Era", labelpad= 25)
@@ -170,5 +186,3 @@ plt.ylabel("Elo rating", labelpad= 32)
 plt.axhline(1200, color='grey', linewidth=5)
 
 plt.show()
-
-			
