@@ -1,0 +1,42 @@
+figure.figsize: 12, 7							#figure size in inches
+figure.facecolor: f0f0f0						#figure face color
+
+lines.linewidth: 3.0							#line widths in points
+
+font.size: 14.0
+
+axes.grid: True
+axes.color_cycle: E24A33, 348ABD, 988ED5, bcbd22, FBC15E, 8EBA42, e377c2, 30a2da, fc4f30, 17becf
+axes.linewidth: 0								#edge line width
+axes.titlesize: 22								#font size of the axes title
+axes.labelsize: 16								#font size of the x and y labels
+axes.labelcolor: grey							#axes label color
+axes.edgecolor: grey							#axes edge color
+axes.facecolor: f0f0f0							#axes background color
+axes.axisbelow: False							#whether axis gridlines and ticks are below
+axes.labelweight: bold
+
+
+xtick.labelsize: 14								#font size of tick labels
+ytick.labelsize: 14								#font size of tick labels
+xtick.major.size: 0								#major tick size in points
+xtick.minor.size: 0								#minor tick size in points
+ytick.major.size: 0								#major tick size in points
+ytick.minor.size: 0								#minor tick size in points
+xtick.major.pad: 10								#distance to major tick label in points
+ytick.major.pad: 20								#distance to major tick label in points
+
+grid.alpha: 0.5									#transparency
+grid.linewidth: 1.0								#line width
+grid.linestyle: -								#line style
+grid.color: D0D0D0								#grid outline color
+
+savefig.transparent: False
+savefig.bbox: tight
+savefig.format: png
+
+
+figure.subplot.left: 0.15						#left side of the subplots of the figure
+figure.subplot.right: 0.95 						#right side of the subplots of the figure
+figure.subplot.bottom: 0.2						#bottom of the subplots of the figure
+figure.subplot.top: 0.82						#top of the subplots of the figure
