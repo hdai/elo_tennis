@@ -1,6 +1,6 @@
 ## Historical ATP Ranking using the Elo rating system
 
-After reading *FiveThirtyEight*'s piece about how [Serena Williams stacks up against all-time female greats](http://fivethirtyeight.com/features/serena-williams-and-the-difference-between-all-time-great-and-greatest-of-all-time/#fn-2) using the Elo rating system, I attempted to apply the same rating system to men's tennis.
+After reading *FiveThirtyEight*'s piece about how [Serena Williams stacks up against all-time female greats](http://fivethirtyeight.com/features/serena-williams-and-the-difference-between-all-time-great-and-greatest-of-all-time/#fn-2) using the Elo rating system, I attempted to apply the same rating system to men's tennis with Python. *FiveThirtyEight* applied [the elo rating system to men's tennis](http://fivethirtyeight.com/features/djokovic-and-federer-are-vying-to-be-the-greatest-of-all-time/) as well. 
 
 > The [Elo Rating system](https://en.wikipedia.org/wiki/Elo_rating_system) was developed by Arpad Elo originally to estimate the strength of chess players. Each player's elo rating is based on their prior results. When two chess players enter a match, the system can calculate the expected outcome using each player's rating and then updates each player's rating once the match has concluded. 
 
@@ -23,4 +23,9 @@ After reading *FiveThirtyEight*'s piece about how [Serena Williams stacks up aga
 | 8    | Andy Murray    | 2382     | 2009-04-12    |
 | 9    | Pete Sampras   | 2381     | 1994-05-09    |
 | 10   | Jimmy Connors  | 2372     | 1978-10-31    |
+
+Taking these top ten players, we will then look at their respective elo ratings throughout their careers.
+
+![alt tag](https://raw.githubusercontent.com/hdai/elo_tennis/master/historical_elo_rating.png)
+
 
