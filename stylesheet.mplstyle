@@ -6,7 +6,7 @@ lines.linewidth: 3.0							#line widths in points
 font.size: 14.0
 
 axes.grid: True
-axes.color_cycle: E24A33, 348ABD, 988ED5, bcbd22, FBC15E, 8EBA42, e377c2, 30a2da, fc4f30, 17becf
+axes.color_cycle: 333333, 348ABD, CCB974, 7A68A6, 467821, CF4457, 188487, e5ae38, 009E73, CC79A7
 axes.linewidth: 0								#edge line width
 axes.titlesize: 22								#font size of the axes title
 axes.labelsize: 16								#font size of the x and y labels
