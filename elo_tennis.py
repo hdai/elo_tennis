@@ -16,7 +16,7 @@ def k_factor(matches_played):
 	shape = 0.4
 	return K/(matches_played + offset)**shape
 
-#winning regardless the number of sets played = 1
+#winning a match regardless the number of sets played = 1
 score = 1
 
 #define a function for calculating the expected score of player_A
@@ -27,7 +27,7 @@ def calc_exp_score(playerA_rating, playerB_rating):
 	
 #define a function for calculating new elo
 def update_elo(old_elo, k, actual_score, expected_score):
-	new_elo = old_elo + k * (actual_score - expected_score)#	return new_elo
+	new_elo = old_elo + k *(actual_score - expected_score)	return new_elo
 
 #read player CSV file and store important columns into lists
 with open('atp_players.csv') as csvfile:
@@ -55,7 +55,7 @@ players['peak_elo_date'] = Series('N/A', index=players.index)
 #Convert objects within dataframe to numeric
 players = players.convert_objects(convert_numeric=True)
 
-#Create an empty dataframe to store time series elo for top 10 players
+#Create an empty dataframe to store time series elo for top 10 players based on peak elo rating
 #Use player_id as the column header of the dataframe
 #Top ten players consist of: Djokovic, Federer, McEnroe, Nadal, Borg, Lendl, Becker, Murray, Sampras, Connors 
 elo_timeseries_col_header = [104925, 103819, 100581, 104745, 100437, 100656, 101414, 104918, 101948, 100284]
@@ -132,20 +132,22 @@ for i in range((2015-1968)+1):
 		elif loser_id in elo_timeseries_col_header:
 			elo_timeseries.ix[tourney_date_timestamp, loser_id]= new_elo_loser
 			
-	##Uncomment to output year end elo_rankings
-	#output_file_name = str(current_year) + 'yr_end_elo_ranking.csv'
+	##Uncomment to output year end elo_rankings for every year between 1968 and 2015
+	#output_file_name = str(current_year) + '_yr_end_elo_ranking.csv'
 	#players.to_csv(output_file_name)
 
 	current_year = current_year + 1
 
-#players = pandas.read_csv('2015_elo_ranking.csv')
+
+players.to_csv('2015_yr_end_elo_ranking.csv')
+players = pandas.read_csv('2015_yr_end_elo_ranking.csv')
 #Print all-time top 10 peak_elo
 print players.sort(columns= 'peak_elo', ascending=False)[:10]
 
-##Save elo_timeseries dataframe for plotting purposes
-#elo_timeseries.to_pickle('elo_timeseries.pkl')
+#Save elo_timeseries dataframe for plotting purposes
+elo_timeseries.to_pickle('elo_timeseries.pkl')
 
-##Open saved pickle file and save into a dataframe
+#Open saved pickle file and save into a dataframe
 elo_timeseries = pandas.read_pickle('elo_timeseries.pkl')
 
 #Convert objects within elo_timeseries dataframe to numeric
@@ -169,18 +171,18 @@ for player in elo_timeseries_col_header:
 		elo_timeseries.loc[i, player] = np.nan
 
 style.use('stylesheet.mplstyle')
-plt.plot(elo_timeseries.index, elo_timeseries[104925])
-plt.plot(elo_timeseries.index, elo_timeseries[103819])
-plt.plot(elo_timeseries.index, elo_timeseries[100581])
-plt.plot(elo_timeseries.index, elo_timeseries[104745])
-plt.plot(elo_timeseries.index, elo_timeseries[100437])
-plt.plot(elo_timeseries.index, elo_timeseries[100656])
-plt.plot(elo_timeseries.index, elo_timeseries[101414])
-plt.plot(elo_timeseries.index, elo_timeseries[104918])
-plt.plot(elo_timeseries.index, elo_timeseries[101948])
-plt.plot(elo_timeseries.index, elo_timeseries[100284])
+plt.plot(elo_timeseries.index, elo_timeseries[104925]) #Djokovic
+plt.plot(elo_timeseries.index, elo_timeseries[103819]) #Federer
+plt.plot(elo_timeseries.index, elo_timeseries[100581]) #McEnroe
+plt.plot(elo_timeseries.index, elo_timeseries[104745]) #Nadal
+plt.plot(elo_timeseries.index, elo_timeseries[100437]) #Borg
+plt.plot(elo_timeseries.index, elo_timeseries[100656]) #Lendl
+plt.plot(elo_timeseries.index, elo_timeseries[101414]) #Becker
+plt.plot(elo_timeseries.index, elo_timeseries[104918]) #Murray
+plt.plot(elo_timeseries.index, elo_timeseries[101948]) #Sampras
+plt.plot(elo_timeseries.index, elo_timeseries[100284]) #Connors
 
-plt.title("Historical elo ratings for top 10 ATP players", fontsize=25, x=0.35, y=1.15)   
+plt.title("Historical elo ratings for top 10 ATP players", fontsize=25, y=1.1, weight = 'bold')   
 plt.xlabel("Years starting in the Open-Era", labelpad= 25)
 plt.ylabel("Elo rating", labelpad= 32)
 plt.axhline(1200, color='grey', linewidth=5)
